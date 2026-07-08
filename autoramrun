@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+"""
+RAM-based Python runner for BOSS OS 11
+Saves/runs scripts in /dev/shm (tmpfs) to avoid disk auto-deletion
+"""
+
+import os
+import sys
+import tempfile
+import subprocess
+from pathlib import Path
+
+RAM_DIR = Path("/dev/shm")
+RAM_DIR.mkdir(exist_ok=True)
+
+def run_in_ram(code: str, filename: str = "script.py"):
+    """Write and execute Python code entirely in RAM"""
+    script_path = RAM_DIR / filename
+    
+    try:
+        script_path.write_text(code)
+        script_path.chmod(0o755)
+        
+        print(f"[+] Running {filename} from RAM...")
+        result = subprocess.run([sys.executable, str(script_path)], 
+                              capture_output=True, text=True, check=False)
+        
+        print(result.stdout)
+        if result.stderr:
+            print("Errors:", result.stderr)
+            
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        # Optional: cleanup after run
+        # script_path.unlink(missing_ok=True)
+        pass
+
+# ========================
+# Example usage - replace with your code
+# ========================
+
+if __name__ == "__main__":
+    my_script = '''
+print("Hello from RAM on BOSS OS 11!")
+import os
+print("Current user:", os.getlogin())
+print("RAM usage:", os.popen("free -h").read().strip())
+# Paste your full script here
+    '''
+    
+    run_in_ram(my_script, "mytool.py")
